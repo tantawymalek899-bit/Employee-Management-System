@@ -1,119 +1,148 @@
 #include <iostream>
 using namespace std;
 
-// Global variables
-const int MAX = 10000;
+const int MAX_SPECIALIZATION = 20;
+const int MAX_QUEUE = 5;
 
-string names[MAX];
-int ages[MAX];
-int salaries[MAX];
-char gender[MAX];
-int added = 0;
+int status[MAX_SPECIALIZATION + 1][MAX_QUEUE];
+string names[MAX_SPECIALIZATION + 1][MAX_QUEUE];
+int length_queue[MAX_SPECIALIZATION + 1];
+
+void shift_left(int spec, string names_sp[], int status_sp[])
+{
+    int pos = length_queue[spec];
+    for (int i = 0; i < pos; i++)
+    {
+        names_sp[i - 1] = names_sp[i];
+        status_sp[i - 1] = status_sp[i];
+    }
+    length_queue[spec]--;
+}
+
+void shift_right(int spec, string names_sp[], int status_sp[])
+{
+    int len = length_queue[spec];
+    for (int i = len - 1; i >= 0; --i)
+    {
+        names_sp[i + 1] = names_sp[i];
+        status_sp[i + 1] = status_sp[i];
+    }
+    length_queue[spec]++;
+}
+
+bool Add_patient()
+{
+    int spec;
+    string name;
+    int st;
+    cout << "Enter specializatin, name, status: ";
+    cin >> spec >> name >> st;
+
+    int pos = length_queue[spec];
+    if (pos >= MAX_QUEUE)
+    {
+        cout << "Sorry we can't add more patient to this specialization\n";
+        return false;
+    }
+
+    if (st == 0)
+    {
+        names[spec][pos] = name;
+        status[spec][pos] = st;
+        length_queue[spec]++;
+    }
+
+    else
+    {
+        shift_right(spec, names[spec], status[spec]);
+        names[spec][0] = name;
+        status[spec][0] = st;
+    }
+    return true;
+}
+
+void print_patient(int spec, string name_sp[], int status_sp[])
+{
+    int len = length_queue[spec];
+    if (len == 0)
+        return;
+    cout << "There are " << length_queue[spec] << " patients in specialization " << spec << endl;
+
+    for (int i = 0; i < len; i++)
+    {
+        cout << names[spec][i] << " ";
+        if (status_sp[i] == 0)
+            cout << "regular\n";
+        else
+            cout << "uregant\n";
+    }
+}
+
+void print_patients()
+{
+    cout << "\n*****************************\n";
+    for (int spec = 0; spec < MAX_SPECIALIZATION; spec++)
+    {
+        print_patient(spec, names[spec], status[spec]);
+    }
+}
+
+void get_next_patient()
+{
+    int spec;
+    cout << "Enter specialization: ";
+    cin >> spec;
+    int pos = length_queue[spec];
+    if (pos == 0)
+    {
+        cout << "There is no patient for now, take a rest ,DR\n";
+        return;
+    }
+
+    cout << names[spec][0] << " please go with Dr\n";
+    shift_left(spec, names[spec], status[spec]);
+}
 
 int menu()
 {
     int choice = -1;
     while (choice == -1)
     {
-        cout << "\nEnter your choice: \n";
-        cout << "1) Add new employee\n";
-        cout << "2) print all employees\n";
-        cout << "3) Delete by age\n";
-        cout << "4) Update salary by name\n";
-        cout << "5) Exit\n";
+        cout << "\nEnter your choice:\n";
+        cout << "1)Add new patient\n";
+        cout << "2)Print All Patient\n";
+        cout << "3)Get next patient\n";
+        cout << "4)Exis\n";
 
         cin >> choice;
 
-        if (!(1 <= choice && choice <= 5))
+        if (!(1 <= choice && choice <= 4))
         {
-            cout << "Invalid input! try again\n";
+            cout << "Invalid input try again\n";
             choice = -1;
         }
-        cout << endl;
     }
+
     return choice;
 }
-
-void read_employee()
-{
-    cout << "Enter name: ";
-    cin >> names[added];
-
-    cout << "Enter age: ";
-    cin >> ages[added];
-
-    cout << "Enter salary: ";
-    cin >> salaries[added];
-
-    cout << "Enter gender (M/F): ";
-    cin >> gender[added];
-
-    added++;
-}
-
-void print_employee()
-{
-    cout << "******************************************\n";
-    for (int i = 0; i < added; i++)
-        if (ages[i] != -1)
-            cout << names[i] << " "
-                 << ages[i] << " "
-                 << salaries[i] << " "
-                 << gender[i] << "\n";
-}
-
-void delete_by_age()
-{
-    int start, end;
-    cout << "Enter start and end age: ";
-    cin >> start >> end;
-
-    for (int i = 0; i < added; i++)
-        if (start <= ages[i] && ages[i] <= end)
-            ages[i] = -1;
-}
-
-void update_salary_by_name()
-{
-    cout << "Enter name and salary: ";
-    string name;
-    int salary;
-    cin >> name >> salary;
-
-    bool found = false;
-
-    for (int i = 0; i < added; i++)
-    {
-        if (ages[i] != -1 && name == names[i])
-        {
-            salaries[i] = salary;
-            found = true;
-            break;
-        }
-    }
-    if (!found)
-        cout << "There is no employee with this name!\n";
-}
-
-void employee_system()
+void hospital_system()
 {
     while (true)
     {
         int choice = menu();
         if (choice == 1)
-            read_employee();
+            Add_patient();
         else if (choice == 2)
-            print_employee();
+            print_patients();
         else if (choice == 3)
-            delete_by_age();
-        else if (choice == 4)
-            update_salary_by_name();
+            get_next_patient();
         else
             break;
     }
 }
+
 int main()
 {
-    employee_system();
+    hospital_system();
     return 0;
 }
